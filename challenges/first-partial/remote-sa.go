@@ -12,8 +12,13 @@ type Point struct {
 	X, Y float64
 }
 
+/* used to get orientation */
+type Vector struct {
+	A, B float64
+}
+
 func main() {
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/", handler) //calling our web server
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
@@ -55,6 +60,40 @@ func getPerimeter(points []Point) float64 {
 	return 0.0
 }
 
+/* construct vector */
+func vector_make(po, q Point) Vector {
+	var v Vector
+	v.A = q.X - po.X
+	v.B = q.Y - po.Y
+	return v
+}
+
+/* cross product in 2D */
+func vector_cross(v, u Vector) float64 {
+	return (v.A * u.B) - (v.B * u.A)
+}
+
+/* counterclockwise */
+func ccw(p, q, r Point) bool {
+	var pq, pr Vector
+	pq = vector_make(p, q)
+	pr = vector_make(p, r)
+	return vector_cross(pq, pr) > 0
+}
+
+/*
+ *  Check for collisions (p1,q1) and (p2,q2)
+ *  – (p1, q1, p2) and (p1, q1, q2) have different orientations and
+ *  – (p2, q2, p1) and (p2, q2, q1) have different orientations.
+ */
+func areIntersecting(v, u, i, k Point) bool {
+	if (ccw(v, u, i) != ccw(v, u, k)) ||
+		(ccw(i, k, v) != ccw(i, k, u)) {
+		return true
+	}
+	return false
+}
+
 // handler handles the web request and reponds it
 func handler(w http.ResponseWriter, r *http.Request) {
 
@@ -75,7 +114,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	area := getArea(vertices)
 	perimeter := getPerimeter(vertices)
 
-	// Logging in the server side
+	// Logging in the server side /*this prints in the server side*/
 	log.Printf("Received vertices array: %v", vertices)
 
 	// Response construction
