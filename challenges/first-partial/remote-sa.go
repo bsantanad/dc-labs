@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -55,9 +56,48 @@ func getArea(points []Point) float64 {
 }
 
 // getPerimeter gets the perimeter from a given array of connected points
+/*
+ * The function basically do 3 things, 
+ * 	1. Get a vector from two consecutive points
+ *	2. Check if that vector would collide with the previous vectors O(n^2)
+ *	3. add the magnitude of the vector to the perimeter 
+ *
+ */
 func getPerimeter(points []Point) float64 {
-	// Your code goes here
-	return 0.0
+
+	var checked_points []Point
+	var perimeter float64
+	var tmp Vector
+	var intsct bool
+
+	perimeter = 0
+	intsct = false
+
+	for i, vertex := range points {
+		if i == len(points)-1 { /* connect last point with first*/
+			tmp = vector_make(points[0], vertex)
+			perimeter += vector_magnitude(tmp)
+			break
+		}
+
+		for i, point := range checked_points {
+			if intsct {
+				return -1
+			}
+			if i == len(points)-1 {
+				intsct = areColliding(points[0], vertex
+					checked_points[i-1], point)
+				continue
+			}
+			intsct = areColliding(vertex, points[i+1],
+				point, checked_points[i+1])
+
+		}
+
+		tmp = vector_make(vertex, points[i+1])
+		perimeter += vector_magnitude(tmp)
+	}
+	return perimeter
 }
 
 /* construct vector */
@@ -66,6 +106,12 @@ func vector_make(po, q Point) Vector {
 	v.A = q.X - po.X
 	v.B = q.Y - po.Y
 	return v
+}
+
+func vector_magnitude(v Vector) float64 {
+	var radicand float64
+	radicand = math.Pow(v.A, 2) + math.Pow(v.B, 2)
+	return math.Sqrt(radicand)
 }
 
 /* cross product in 2D */
@@ -86,7 +132,7 @@ func ccw(p, q, r Point) bool {
  *  – (p1, q1, p2) and (p1, q1, q2) have different orientations and
  *  – (p2, q2, p1) and (p2, q2, q1) have different orientations.
  */
-func areIntersecting(v, u, i, k Point) bool {
+func areColliding(v, u, i, k Point) bool {
 	if (ccw(v, u, i) != ccw(v, u, k)) ||
 		(ccw(i, k, v) != ccw(i, k, u)) {
 		return true
@@ -111,6 +157,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Results gathering
+	if len(vertices) < 3 {
+		response := fmt.Sprintf("[BAD INPUT] not enough vertex\n")
+		fmt.Fprintf(w, response)
+		return
+	}
 	area := getArea(vertices)
 	perimeter := getPerimeter(vertices)
 
