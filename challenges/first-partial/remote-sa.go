@@ -186,11 +186,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Response construction
 	response := fmt.Sprintf("Welcome to the Remote Shapes Analyzer\n")
 	response += fmt.Sprintf(" - Your figure has : [%v] vertices\n",
-		len(vertices))
+														len(vertices))
 
 	if len(vertices) < 3 {
 		response += fmt.Sprintf("ERROR - Your shape is not compliying" +
-			"with the minimum number of vertices.\n")
+			" with the minimum number of vertices.\n")
 		fmt.Fprintf(w, response)
 		return
 	}
