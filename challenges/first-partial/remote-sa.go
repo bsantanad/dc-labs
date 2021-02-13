@@ -13,7 +13,7 @@ type Point struct {
 	X, Y float64
 }
 
-/* used to get orientation */
+/* used to get orientation and magnitude */
 type Vector struct {
 	A, B float64
 }
@@ -50,17 +50,38 @@ func generatePoints(s string) ([]Point, error) {
 }
 
 // getArea gets the area inside from a given shape
+/*
+ *
+ * Shoelace algorithm
+ *
+ */
 func getArea(points []Point) float64 {
-	// Your code goes here
-	return 0.0
+	var n uint
+	var tmp_sum1, tmp_sum2 float64
+	var area float64
+
+	n = uint(len(points))
+
+	var i uint
+	for i = 0; i < n-1; i++ {
+		tmp_sum1 += points[i].X * points[i+1].Y
+		tmp_sum2 += points[i].Y * points[i+1].X
+	}
+
+	tmp_sum1 += points[n-1].X * points[0].Y
+	tmp_sum2 += points[0].X * points[n-1].Y
+
+	area = math.Abs(tmp_sum1-tmp_sum2) / 2
+
+	return area
 }
 
 // getPerimeter gets the perimeter from a given array of connected points
 /*
- * The function basically do 3 things, 
+ * The function basically do 3 things,
  * 	1. Get a vector from two consecutive points
  *	2. Check if that vector would collide with the previous vectors O(n^2)
- *	3. add the magnitude of the vector to the perimeter 
+ *	3. add the magnitude of the vector to the perimeter
  *
  */
 func getPerimeter(points []Point) float64 {
@@ -85,7 +106,7 @@ func getPerimeter(points []Point) float64 {
 				return -1
 			}
 			if i == len(points)-1 {
-				intsct = areColliding(points[0], vertex
+				intsct = areColliding(points[0], vertex,
 					checked_points[i-1], point)
 				continue
 			}
@@ -155,22 +176,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-
-	// Results gathering
-	if len(vertices) < 3 {
-		response := fmt.Sprintf("[BAD INPUT] not enough vertex\n")
-		fmt.Fprintf(w, response)
-		return
-	}
-	area := getArea(vertices)
+	/*switched order, getPerimeter checks for collisions*/
 	perimeter := getPerimeter(vertices)
+	area := getArea(vertices)
 
 	// Logging in the server side /*this prints in the server side*/
 	log.Printf("Received vertices array: %v", vertices)
 
 	// Response construction
 	response := fmt.Sprintf("Welcome to the Remote Shapes Analyzer\n")
-	response += fmt.Sprintf(" - Your figure has : [%v] vertices\n", len(vertices))
+	response += fmt.Sprintf(" - Your figure has : [%v] vertices\n",
+		len(vertices))
+
+	if len(vertices) < 3 {
+		response += fmt.Sprintf("ERROR - Your shape is not compliying" +
+			"with the minimum number of vertices.\n")
+		fmt.Fprintf(w, response)
+		return
+	}
+
+	if perimeter == -1 {
+		response += fmt.Sprintf("ERROR - bad polygon, intersections found\n")
+		fmt.Fprintf(w, response)
+		return
+	}
+
 	response += fmt.Sprintf(" - Vertices        : %v\n", vertices)
 	response += fmt.Sprintf(" - Perimeter       : %v\n", perimeter)
 	response += fmt.Sprintf(" - Area            : %v\n", area)
