@@ -2,16 +2,28 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log"
 	"net"
+	"os"
 	"time"
+	"fmt"
 )
 
-func handleConn(c net.Conn) {
+type Input struct {
+	port     int
+	timezone string
+}
+
+func handleConn(c net.Conn, tz string) {
 	defer c.Close()
+	loc, _ := time.LoadLocation(tz)
 	for {
-		_, err := io.WriteString(c, time.Now().Format("15:04:05\n"))
+		/*print time in loc*/
+		_, err := io.WriteString(c,
+				time.Now().In(loc).Format("15:04:05\n"))
+
 		if err != nil {
 			return // e.g., client disconnected
 		}
@@ -20,7 +32,14 @@ func handleConn(c net.Conn) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:9090")
+
+	var input Input
+	var host string
+
+	input = manageInput()
+	host = "localhost:" + fmt.Sprintf("%d", input.port)
+
+	listener, err := net.Listen("tcp", host)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,6 +49,21 @@ func main() {
 			log.Print(err) // e.g., connection aborted
 			continue
 		}
-		go handleConn(conn) // handle connections concurrently
+		go handleConn(conn, input.timezone) // handle connections concurrently
 	}
+}
+
+func manageInput() Input {
+
+	var input Input
+	var tmpPort *int
+
+	input.timezone = os.Getenv("TZ")
+
+	tmpPort = flag.Int("port", 9000, "port number.")
+	flag.Parse()
+	input.port = *tmpPort
+
+	return input
+
 }
