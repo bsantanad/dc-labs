@@ -9,12 +9,7 @@ import (
 	"log"
 )
 
-func getTime(conn io.Reader, stdout io.Writer, host string) {
-	log.Print(host)
-	log.Print(conn)
-	var response io.Reader
-	//response = conn
-	log.Print(response)
+func printTime(conn io.Reader, stdout io.Writer) {
 	_, err := io.Copy(stdout, conn)
 	if err != nil {
 		log.Fatal(err)
@@ -25,21 +20,28 @@ func getTime(conn io.Reader, stdout io.Writer, host string) {
 func main() {
 
 	args := os.Args[1:]
-	hosts := make([]string, len(args))
-	//time := make(chan io.Writer)
-	//time := make(chan io.Reader)
+	hosts := make([]string, 0)
 
 	for _, arg := range args {
 		indexEq := strings.Index(arg, "=") + 1
 		hosts = append(hosts, arg[indexEq:])
 	}
-	log.Print(hosts[1])
-	conn, err := net.Dial("tcp", hosts[1])
+
+	response := make(chan io.Reader, 10)
+	defer close(response)
+
+	for _, host := range hosts {
+		go getTime(response, host)
+		time := <-response
+		go printTime(time, os.Stdout)
+	}
+	//getTime(<-response, os.Stdout, hosts[1])
+}
+
+func getTime(c chan io.Reader,/* conn net.Conn,*/ host string){
+	conn, err := net.Dial("tcp", host)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Print("im here 1")
-	log.Print(conn)
-	defer conn.Close()
-	getTime(conn, os.Stdout, hosts[1])
+	c <- conn
 }
