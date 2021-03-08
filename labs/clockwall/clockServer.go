@@ -29,7 +29,7 @@ func handleConn(c net.Conn, tz string) {
 		if err != nil {
 			return // e.g., client disconnected
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
