@@ -4,25 +4,42 @@ package main
 import (
 	"os"
 	"strings"
-	"fmt"
+	"io"
+	"net"
+	"log"
 )
 
-/*func main(dst io.Writer, src io.Reader) {
+func getTime(conn io.Reader, stdout io.Writer, host string) {
+	log.Print(host)
+	log.Print(conn)
+	var response io.Reader
+	//response = conn
+	log.Print(response)
+	_, err := io.Copy(stdout, conn)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
-
-}*/
 
 func main() {
 
 	args := os.Args[1:]
 	hosts := make([]string, len(args))
+	//time := make(chan io.Writer)
+	//time := make(chan io.Reader)
 
 	for _, arg := range args {
 		indexEq := strings.Index(arg, "=") + 1
-		fmt.Printf("%s\n", arg[indexEq:])
 		hosts = append(hosts, arg[indexEq:])
 	}
-	//conn, err := net.Dial("tcp", "")
-
-
+	log.Print(hosts[1])
+	conn, err := net.Dial("tcp", hosts[1])
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Print("im here 1")
+	log.Print(conn)
+	defer conn.Close()
+	getTime(conn, os.Stdout, hosts[1])
 }
