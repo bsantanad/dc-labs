@@ -21,8 +21,10 @@ func handleConn(c net.Conn, tz string) {
 	loc, _ := time.LoadLocation(tz)
 	for {
 		/*print time in loc*/
-		_, err := io.WriteString(c,
-				time.Now().In(loc).Format("15:04:05\n"))
+		time_now := time.Now().In(loc).Format("15:04:05\n")
+		response := tz + " " + time_now
+		_, err := io.WriteString(c, response)
+				//time.Now().In(loc).Format("15:04:05\n"))
 
 		if err != nil {
 			return // e.g., client disconnected
@@ -37,14 +39,17 @@ func main() {
 	var host string
 
 	input = manageInput()
-	host = "localhost:" + fmt.Sprintf("%d", input.port)
+	//host = "localhost:" + fmt.Sprintf("%d", input.port)
+	host = "0.0.0.0:" + fmt.Sprintf("%d", input.port)
 
 	listener, err := net.Listen("tcp", host)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Print(host)
 	for {
 		conn, err := listener.Accept()
+		log.Print(conn)
 		if err != nil {
 			log.Print(err) // e.g., connection aborted
 			continue
