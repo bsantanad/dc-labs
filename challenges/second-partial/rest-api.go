@@ -103,6 +103,11 @@ func delLogout(w http.ResponseWriter, r *http.Request) {
 func postUpload(w http.ResponseWriter, r *http.Request) {
 	return
 }
+
+// getStatus, show the status of the account related
+// to the token sent in the header, proper validations
+// are done, and then the creation time, and a msg is
+// returned to the user
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("[INFO]: GET /status requested")
 	tmp := r.Header.Get("Authorization")
