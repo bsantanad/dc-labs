@@ -21,6 +21,8 @@ type User struct {
 
 var Users []User /* this will act as out DB */
 
+/********************* Endpoint Functions ***************************/
+
 func homePage(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "distributed and parallel image processing rest api\n")
 	fmt.Println("[INFO]: / requested")
@@ -59,7 +61,21 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func delLogout(w http.ResponseWriter, r *http.Request) {
-	return
+	fmt.Println("[INFO]: DELETE /logout requested")
+	tmp := r.Header.Get("Authorization")
+	if strings.Fields(tmp)[0] != "Bearer" {
+		http.Error(w, "bad request, check headers \n"+
+			"you must send a Bearer token", 400)
+		return
+	}
+	token := strings.Fields(tmp)[1] // get the token from header
+	user, exists := searchToken(token)
+	if !exists {
+		http.Error(w, "token not found, \n"+
+			"please provide a valid one", 400)
+		return
+	}
+	fmt.Println(user)
 }
 func postUpload(w http.ResponseWriter, r *http.Request) {
 	return
@@ -67,6 +83,8 @@ func postUpload(w http.ResponseWriter, r *http.Request) {
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	return
 }
+
+/********************* Handler Functions ***************************/
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -137,6 +155,18 @@ func handleRequests() {
 	http.HandleFunc("/upload", handleUpload)
 	http.HandleFunc("/status", handleStatus)
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+/********************* Helper Functions ***************************/
+
+func searchToken(token string) (User, bool) {
+	for _, user := range Users {
+		if user.Token == token {
+			return user, true
+		}
+	}
+	var tmp User
+	return tmp, false
 }
 
 func main() {
