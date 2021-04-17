@@ -21,6 +21,11 @@ type User struct {
 	Time     string `json:"time"`
 }
 
+type Status struct {
+	Message string `json:"message"`
+	Time    string `json:"time"`
+}
+
 type Message struct {
 	Message string `json:"message"`
 }
@@ -90,8 +95,8 @@ func delLogout(w http.ResponseWriter, r *http.Request) {
 			"please provide a valid one")
 		return
 	}
-	Users = removeUser(Users, index)
 
+	Users = removeUser(Users, index)
 	returnMsg(w, "Bye "+user.Username+", your token has been revoked")
 }
 
@@ -99,7 +104,30 @@ func postUpload(w http.ResponseWriter, r *http.Request) {
 	return
 }
 func getStatus(w http.ResponseWriter, r *http.Request) {
-	return
+	fmt.Println("[INFO]: GET /status requested")
+	tmp := r.Header.Get("Authorization")
+	if strings.Fields(tmp)[0] != "Bearer" {
+		w.WriteHeader(400)
+		returnMsg(w, "bad request, check headers "+
+			"you must send a Bearer token")
+		return
+	}
+	token := strings.Fields(tmp)[1] // get the token from header
+	_, user, exists := searchToken(token)
+	if !exists {
+		w.WriteHeader(400)
+		returnMsg(w, "token not found, "+
+			"please provide a valid one")
+		return
+	}
+
+	var status Status
+	status = Status{
+		Message: "Hi " + user.Username + ", the DPIP System is Up and Running",
+		Time:    user.Time,
+	}
+
+	json.NewEncoder(w).Encode(status)
 }
 
 /********************* Handler Functions ***************************/
