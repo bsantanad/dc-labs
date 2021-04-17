@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type LoginResponse struct {
@@ -17,6 +18,11 @@ type LoginResponse struct {
 type User struct {
 	Username string `json:"user"`
 	Token    string `json:"token"`
+	Time     string `json:"time"`
+}
+
+type Message struct {
+	Message string `json:"message"`
 }
 
 var Users []User /* this will act as out DB */
@@ -24,7 +30,9 @@ var Users []User /* this will act as out DB */
 /********************* Endpoint Functions ***************************/
 
 func homePage(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "distributed and parallel image processing rest api\n")
+
+	w.WriteHeader(200)
+	returnMsg(w, "DPIP REST API index. Invalid enpoints will redirect here")
 	fmt.Println("[INFO]: / requested")
 }
 
@@ -54,31 +62,44 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 	userInfo = User{
 		Username: user,
 		Token:    token,
+		Time:     time.Now().UTC().String(),
 	}
 	Users = append(Users, userInfo)
 
 	json.NewEncoder(w).Encode(login)
 }
 
+// delLogout function will revoke a token from being usable.
+// first it checks if the headers are sent in the correct
+// format, then it will search the token in the Users "DB"
+// if found it will remove it, if not, it will return 400
 func delLogout(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("[INFO]: DELETE /logout requested")
 	tmp := r.Header.Get("Authorization")
 	if strings.Fields(tmp)[0] != "Bearer" {
-		http.Error(w, "bad request, check headers \n"+
-			"you must send a Bearer token", 400)
+		w.WriteHeader(400)
+		returnMsg(w, "bad request, check headers "+
+			"you must send a Bearer token")
 		return
 	}
 	token := strings.Fields(tmp)[1] // get the token from header
 	index, user, exists := searchToken(token)
 	if !exists {
-		http.Error(w, "token not found, \n"+
-			"please provide a valid one", 400)
+		w.WriteHeader(400)
+		returnMsg(w, "token not found, "+
+			"please provide a valid one")
 		return
 	}
 	Users = removeUser(Users, index)
-	fmt.Println(user)
-	fmt.Println(Users)
+
+	returnMsg(w, "Bye "+user.Username+", your token has been revoked")
+	/*var msg Message
+	msg = Message{
+		Message: "Bye " + user.Username + ", your token has been revoked",
+	}
+	json.NewEncoder(w).Encode(msg)*/
 }
+
 func postUpload(w http.ResponseWriter, r *http.Request) {
 	return
 }
@@ -91,45 +112,57 @@ func getStatus(w http.ResponseWriter, r *http.Request) {
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodPost:
 		postLogin(w, r) // post
 	case http.MethodPut:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodDelete:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	default:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	}
 
 }
 func handleLogout(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodPost:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodPut:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodDelete:
 		delLogout(w, r) // delete
 	default:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	}
 
 }
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodPost:
 		postUpload(w, r) // post
 	case http.MethodPut:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodDelete:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	default:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	}
 
 }
@@ -139,13 +172,17 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		getStatus(w, r) //get
 	case http.MethodPost:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodPut:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	case http.MethodDelete:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	default:
-		http.Error(w, "not found", 404)
+		w.WriteHeader(404)
+		returnMsg(w, "page not found")
 	}
 
 }
@@ -161,6 +198,8 @@ func handleRequests() {
 
 /********************* Helper Functions ***************************/
 
+// Search token in Users, returned index, user struct
+// and boolean that tells us if it was found.
 func searchToken(token string) (int, User, bool) {
 	for i, user := range Users {
 		if user.Token == token {
@@ -176,6 +215,15 @@ func searchToken(token string) (int, User, bool) {
 func removeUser(users []User, index int) []User {
 	users[index] = users[len(users)-1]
 	return users[:len(users)-1]
+}
+
+func returnMsg(w http.ResponseWriter, msg string) {
+	var msgJSON Message
+	msgJSON = Message{
+		Message: msg,
+	}
+	json.NewEncoder(w).Encode(msgJSON)
+
 }
 
 func main() {
