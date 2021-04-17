@@ -48,7 +48,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 		Token:   token,
 	}
 
-    var userInfo User
+	var userInfo User
 	userInfo = User{
 		Username: user,
 		Token:    token,
