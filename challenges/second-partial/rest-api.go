@@ -25,7 +25,7 @@ type Message struct {
 	Message string `json:"message"`
 }
 
-var Users []User /* this will act as out DB */
+var Users []User /* this will act as our DB */
 
 /********************* Endpoint Functions ***************************/
 
@@ -93,11 +93,6 @@ func delLogout(w http.ResponseWriter, r *http.Request) {
 	Users = removeUser(Users, index)
 
 	returnMsg(w, "Bye "+user.Username+", your token has been revoked")
-	/*var msg Message
-	msg = Message{
-		Message: "Bye " + user.Username + ", your token has been revoked",
-	}
-	json.NewEncoder(w).Encode(msg)*/
 }
 
 func postUpload(w http.ResponseWriter, r *http.Request) {
