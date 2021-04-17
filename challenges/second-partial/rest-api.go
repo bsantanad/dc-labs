@@ -69,13 +69,15 @@ func delLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	token := strings.Fields(tmp)[1] // get the token from header
-	user, exists := searchToken(token)
+	index, user, exists := searchToken(token)
 	if !exists {
 		http.Error(w, "token not found, \n"+
 			"please provide a valid one", 400)
 		return
 	}
+	Users = removeUser(Users, index)
 	fmt.Println(user)
+	fmt.Println(Users)
 }
 func postUpload(w http.ResponseWriter, r *http.Request) {
 	return
@@ -159,14 +161,21 @@ func handleRequests() {
 
 /********************* Helper Functions ***************************/
 
-func searchToken(token string) (User, bool) {
-	for _, user := range Users {
+func searchToken(token string) (int, User, bool) {
+	for i, user := range Users {
 		if user.Token == token {
-			return user, true
+			return i, user, true
 		}
 	}
 	var tmp User
-	return tmp, false
+	return -1, tmp, false
+}
+
+// swap the user you want to remove with the
+// last item, return the slice without the last item
+func removeUser(users []User, index int) []User {
+	users[index] = users[len(users)-1]
+	return users[:len(users)-1]
 }
 
 func main() {
