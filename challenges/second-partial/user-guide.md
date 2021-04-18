@@ -22,7 +22,7 @@ Just clone the repository and _cd_ into the project dir.
 
 So in order to start the server, you'll need to do
 ```bash
-go run main.go
+go run rest-api.go
 ```
 Pretty easy right? The API is up and running
 
