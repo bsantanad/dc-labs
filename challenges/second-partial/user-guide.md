@@ -113,3 +113,4 @@ If you try to run the endpoints with the wrong http method, you'll
 get a 404. If you try to call a none existing endpoint you'll be redirected to
 index.
 
+[install]: https://golang.org/doc/install
