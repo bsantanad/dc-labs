@@ -166,7 +166,6 @@ func postUpload(w http.ResponseWriter, r *http.Request) {
 
 	buf.Reset()
 
-	fmt.Println(image.Size)
 	var msg ImageMsg
 	msg = ImageMsg{
 		Message:  "An image has been successfully uploaded :)",
