@@ -6,14 +6,14 @@ create users, and with a token (given by the api), they will be able to
 * check user status
 * upload images
 
-It's pretty easy to use and pretty straght forward. So let's get to it.
+It's pretty easy to use and pretty straight forward. So let's get to it.
 
 ## Installation
 
 Good news! We didn't use any external framework or libraries, so everything
 you'll need comes with the standard libraries and modules from Golang.
 
-Obviosuly you need to have [golang installed][install], but after that you
+Obviously you need to have [golang installed][install], but after that you
 are good to go :)
 
 Just clone the repository and _cd_ into the project dir.
@@ -65,7 +65,7 @@ Output:
 }
 ```
 **Note:** The time will change according to when you created the user. We use UTC to
-avoid confussions when using it in different timezones.
+avoid confusions when using it in different timezones.
 
 This endpoint will show you the status of the user, if not logged in it will
 display a message telling the user that it didn't find the token.
@@ -87,7 +87,7 @@ Output:
 ```
 
 This endpoint will upload an image to the user with the token sent. It will
-return the file name, and the size in bytes. A user can have more that one
+return the file name, and the size in bytes. A user can have more than one
 image uploaded
 
 ### logout - DELETE
@@ -104,12 +104,12 @@ Output:
 ```
 
 This will remove the user and the token from the _"database"_, this means that
-this user will loose all their images and it's token. The token will become
-invalid an will not longer be a valid token in the API
+this user will lose all their images, and it's token. The token will become
+invalid and will no longer be a valid token in the API
 
 ## Extra Notes
 
 If you try to run the endpoints with the wrong http method, you'll
-get a 404. If you try to call a none existing enpoint you'll be redirected to
+get a 404. If you try to call a none existing endpoint you'll be redirected to
 index.
 
