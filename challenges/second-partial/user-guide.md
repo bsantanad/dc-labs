@@ -26,7 +26,7 @@ go run rest-api.go
 ```
 Pretty easy right? The API is up and running
 
-## Enpoints
+## Endpoints
 
 Will be using `curl(1)` for the examples, if you need help with the tool
 you can always do:
