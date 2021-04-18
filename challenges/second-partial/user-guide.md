@@ -70,7 +70,7 @@ avoid confusions when using it in different timezones.
 This endpoint will show you the status of the user, if not logged in it will
 display a message telling the user that it didn't find the token.
 
-### upload - POST
+### /upload - POST
 Quick example:
 ```bash
 curl -X POST -F 'data=@<path to image>' \
@@ -90,7 +90,7 @@ This endpoint will upload an image to the user with the token sent. It will
 return the file name, and the size in bytes. A user can have more than one
 image uploaded
 
-### logout - DELETE
+### /logout - DELETE
 
 Quick example:
 ```bash
