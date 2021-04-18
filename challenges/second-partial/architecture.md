@@ -3,7 +3,6 @@
 ![architecure](api-arch.jpeg)
 
 **\*\*fake DB**: Since all the testing and work in the application will be
-
 at runtime, there is no need to use a proper DB. We store the users and images
 inside de API server itself (making it not quite a RESTFUL api).
 
