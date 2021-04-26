@@ -13,19 +13,19 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
-    "strings"
-    "strconv"
-    "bufio"
+	"strconv"
+	"strings"
 
 	"gopl.io/ch5/links"
 )
 
-type Workelement struct {
-    channel chan []string
-    myDepth int
+type Worker struct {
+	urlList []string
+	depth   int
 }
 
 //!+sema
@@ -34,11 +34,12 @@ type Workelement struct {
 var tokens = make(chan struct{}, 20)
 
 func crawl(url string, w *bufio.Writer) []string {
-	_, err := fmt.Fprintf(w, "%v\n", url)
-    if err != nil {
-        fmt.Println("could not write into file :(")
-    }
+	// write into the file
 	tokens <- struct{}{} // acquire a token
+	_, err := fmt.Fprintf(w, "%v\n", url)
+	if err != nil {
+		fmt.Println("could not write into file :(")
+	}
 	list, err := links.Extract(url)
 	<-tokens // release the token
 
@@ -52,72 +53,84 @@ func crawl(url string, w *bufio.Writer) []string {
 
 //!+
 func main() {
-    //worklist := make(chan []string, int)
-	var n int // number of pending sends to worklist
 
-	// Start with the command-line arguments.
-	n++
-	//go func() { worklist <- os.Args[1:] }()
-
-    // handle args
+	// handle args
 	args := os.Args[1:]
 	if len(args) < 3 {
 		fmt.Printf("not enough arguments, please do: \n" +
 			"./web-crawler -depth=<n> -results=<filename> <url> \n")
-        return
+		return
 	}
 
-    // fill the worklist
-    //var we Workelement
-    //we.channel I:= 
-    worklist := make(chan []string)
-    var tmp []string
-    tmp = append(tmp, args[2])
-    go func() { worklist <- tmp }()
+	var depth int
+	var filename string
+	var url string
 
-    var depth int
-    var filename string
-    for _, arg := range args[:2] {
-        param := strings.Split(arg, "=")
-        switch param[0] {
-            case "-depth":
-                num, err := strconv.Atoi(param[1])
-                depth = num
-                if err != nil{
-                    fmt.Printf("bad arguments, please use: \n" +
-                        "./web-crawler -depth=<n> -results=<filename> <url> \n")
-                    return
-                }
-            case "-results":
-                filename = param[1]
-            default:
-                fmt.Printf("bad arguments, please use: \n" +
-                    "./web-crawler -depth=<n> -results=<filename> <url> \n")
-                return
-        }
-    }
-    fmt.Printf("%v\n", depth)
+	// without last element because its the url
+	url = args[len(args)-1]
+	for _, arg := range args[:len(args)-1] {
+		param := strings.Split(arg, "=")
+		switch param[0] {
+		case "-depth":
+			num, err := strconv.Atoi(param[1])
+			depth = num
+			if err != nil {
+				fmt.Printf("bad arguments, please use: \n" +
+					"./web-crawler -depth=<n> -results=<filename> <url> \n")
+				return
+			}
+		case "-results":
+			filename = param[1]
+		default:
+			fmt.Printf("bad arguments, please use: \n" +
+				"./web-crawler -depth=<n> -results=<filename> <url> \n")
+			return
+		}
+	}
 
-    f, err := os.Create(filename)
-    if err != nil {
-        fmt.Println("could not create resutls file :(");
-        return
-    }
-    defer f.Close()
-    w := bufio.NewWriter(f)
-    defer w.Flush()
+	// create file in which we will print
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println("could not create resutls file :(")
+		return
+	}
+	defer f.Close()
+	w := bufio.NewWriter(f)
+	defer w.Flush()
+
+	// worklist
+	var first Worker
+	var tmp []string
+	tmp = append(tmp, url)
+
+	first.depth = 0
+	first.urlList = tmp
+
+	worklist := make(chan Worker)
+	go func() { worklist <- first }()
+
+	var n int // number of pending sends to worklist
+	n++
 
 	// Crawl the web concurrently.
 	seen := make(map[string]bool)
 	for ; n > 0; n-- {
-        fmt.Printf("%v\n", n)
-		list := <-worklist
-		for _, link := range list {
+
+		workers := <-worklist
+		actualDepth := workers.depth
+
+		for _, link := range workers.urlList {
 			if !seen[link] {
 				seen[link] = true
+				if actualDepth >= depth {
+					continue
+				}
 				n++
 				go func(link string) {
-					worklist <- crawl(link, w)
+					var tmp Worker
+					tmp.depth = actualDepth + 1
+					tmp.urlList = crawl(link, w)
+					worklist <- tmp
 				}(link)
 			}
 		}
